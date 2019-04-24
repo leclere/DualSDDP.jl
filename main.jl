@@ -15,7 +15,7 @@ SAVE   = false
 ALGO = 4
 
 # define a production transport problem MPTS
-mpts = MPTS([:FRA, :GER, :ESP, :UK, :PT, :ITA, :SUI, :BEL], 12, 20)
+mpts = MPTS([:FRA, :GER, :ESP, :UK, :PT, :ITA, :SUI, :BEL], 36, 10)
 
 # Init SDDP interface
 sddpprimal = initprimal(mpts)
@@ -27,16 +27,18 @@ elseif ALGO == 2
     lbdual, timedual = rundual!(sddpdual, sddpprimal)
 elseif ALGO == 3
     sddpdual = initdual(mpts, sddpprimal)
-    lbdual, timedual, ubp, stdp = runjoint!(sddpprimal, sddpdual, maxiterations=500)
+    lbdual, timedual, ubp, stdp = runjoint!(sddpprimal, sddpdual, maxiterations=100)
     # recalibrate dual time
     timedual -= sddpprimal.stats.exectime
 elseif ALGO == 4
     include("src/dp.jl")
-    ubp, stdp,  trajs = runprimal!(sddpprimal, maxiterations=500)
+    ubp, stdp,  trajs = runprimal!(sddpprimal, maxiterations=1000)
     ubphilpott = []
-    for n in [50,100,200,500]
+    for n in [50,100,200,300,400,500,600,700,800,900,1000]
         println(n)
-        push!(ubphilpott , solvedp!(sddpprimal.spmodel, trajs[1:n])[1,1])
+        ub_p =  solvedp!(sddpprimal.spmodel, trajs[1:n])[1,1]
+        println(ub_p)
+        push!(ubphilpott , ub_p )
     end
 end
 
