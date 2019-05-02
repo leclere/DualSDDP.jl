@@ -62,6 +62,11 @@ function runprimal!(sddpprimal; nbsimu=100, maxiterations=100,
         end
         # reload JuMP model to avoid memory leak
         (iter % 10 == 0) && SDDP.reload!(sddpprimal)
+
+        if (iter % 10 == 0)
+            print("Pass n\° ", iter)
+            @printf("\tLB-P: %.4e ", sddpprimal.stats.lowerbound)
+        end
     end
 
     texec = toq()
@@ -143,9 +148,9 @@ function runjoint!(sddpprimal, sddpdual; nbsimu=100, maxiterations=100,
     for iter in 1:maxiterations
         tic()
         # perform a mixed iteration between primal and dual SDDP
-        td = SDDP.iteration!(sddpprimal, sddpdual)
+        td, traj = SDDP.iteration!(sddpprimal, sddpdual)
         # save primal trajectory
-        #push!(trajp, Trajectory(SDDP.simulate(sddpprimal, 1)[2]))
+        push!(trajp, Trajectory(traj))
 
         # update initial co-state
         updateinitialstate!(sddpdual, X0)
@@ -178,8 +183,8 @@ function runjoint!(sddpprimal, sddpdual; nbsimu=100, maxiterations=100,
 
         if (iter % 10 == 0)
             print("Pass n\° ", iter)
-            @printf("\tLB: %.4e ", sddpprimal.stats.lowerbound)
-            @printf("\tUB: %.4e \n", ub)
+            @printf("\tLB-P: %.4e ", sddpprimal.stats.lowerbound)
+            @printf("\tUB-D: %.4e \n", ub)
         end
         # reload JuMP model to avoid memory leak
         (iter % 51 == 0) && SDDP.reload!(sddpprimal)
